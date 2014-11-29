@@ -1,0 +1,113 @@
+/* AKWARIUM - Dariusz Makarewicz */
+
+#include <iostream>
+#include <iomanip>
+
+using namespace std;
+
+int main()
+{
+    unsigned long long int D;
+    unsigned long long int *W;
+    unsigned long long int *H;
+    unsigned long long int *L;
+    unsigned long long int **pi;
+    unsigned long long int *tablica_robocza;
+    unsigned long long int licznik_1;
+    unsigned long long int licznik_2;
+    unsigned long long int czesc_calkowita;
+    double ulamek;
+
+    cin >> D; //Podanie liczby zestawów testowych
+
+
+    W = new unsigned long long int[D]; //Tworzenie nowych elementów dla każdego zestawu - szerokość
+    H = new unsigned long long int[D]; //wysokość
+    L = new unsigned long long int[D]; //litry wlanej wody
+    pi = new unsigned long long int*[D]; //wysokość pojedynczego klocka
+
+
+//Część podawania danych
+
+    for (unsigned long long int zestaw = 0; zestaw < D; ++zestaw)
+    {
+        cin >> W[zestaw] >> H[zestaw] >> L[zestaw]; //wczytanie trzech wartości w jednej linii
+
+        pi[zestaw] = new unsigned long long int[W[zestaw]]; //nowe wartości wysokości dla nowych klocków
+        for (unsigned long long int szerokosc = 0; szerokosc < W[zestaw]; ++szerokosc)
+        {
+            cin >> pi[zestaw][szerokosc]; //dla każdego zestawu tyle klocków, ile wynosi szerokość "W" akwarium
+            if (!(pi[zestaw][szerokosc] <= H[zestaw]))
+                return 0;
+        }
+    }
+
+//Część algorytmu
+
+
+    for(unsigned long long int zestaw = 0; zestaw < D; ++zestaw) // główna pętla dla każdego zestawu testowego
+    {
+        cout << endl << "Obliczenia dla zestawu numer: " << zestaw + 1 << endl;
+
+        tablica_robocza = new unsigned long long int [H[zestaw]];// tworzenie nowych elementów roboczej tablicy w której nastąpi zliczanie ilości klocków o tej samej wysokości dla danego poziomu
+
+        for (unsigned long long int wysokosc = 0; wysokosc < H[zestaw]; ++wysokosc)  // wypełnienie tablicy roboczej danymi początkowymi, czyli zerami
+        {
+            tablica_robocza[wysokosc] = 0;
+        }
+
+        for (unsigned long long int szerokosc = 0; szerokosc < W[zestaw]; ++szerokosc)
+        {
+            tablica_robocza[pi[zestaw][szerokosc]] += 1;// inkrementowanie elementu tablicy roboczej, gdy klocek się kończy na danej wysokości, żeby można wygodnie zliczać puste przestrzenie na każdym następnym poziomie
+        }
+
+        cout << endl << "Tablica robocza:" << endl;
+
+        for (unsigned long long int polozenie_roboczej = 0; polozenie_roboczej < H[zestaw]; ++polozenie_roboczej)// wyświetlanie zawartości tablicy roboczej
+        {
+            cout << polozenie_roboczej << "; " << tablica_robocza[polozenie_roboczej] << endl;
+        }
+        cout << endl;
+
+        licznik_1 = 0;
+        licznik_2 = 0;//w tej zmiennej zawiera się ilość miejsca do wlania wody na każdym poziomie
+
+        unsigned long long int polozenie_roboczej = 0;
+        for(; polozenie_roboczej < H[zestaw]; ++polozenie_roboczej)
+        {
+            licznik_1 += tablica_robocza[polozenie_roboczej];// przy każdym sprawdzaniu poziomów licznik_1 przyjmuje następne "końce klocków", czyli następne puste miejsca w które można by wlać wodę
+            licznik_2 += licznik_1;// w zmiennej licznik_2 anajduje się ilość miejsca do wlania wody na każdym poziomie
+
+            if(licznik_2 > L[zestaw])//jeśli jest więcej pustego miejsca do wlania wody niż ilości wlewanej wody, czas doprowadzić obliczenia do końca
+            {
+                czesc_calkowita = polozenie_roboczej;// część całkowita będzie równa indeksowi tablicy roboczej (numerowanej od zera)
+                licznik_2 -= licznik_1;// trzeba wrócić się do wartości licznika o poziom niżej (wcześniej)
+                ulamek = double(L[zestaw] - licznik_2) / double(licznik_1);// do zmiennej ułamek przypisujemy różnicę wlanej wody i ostatniej wartości zapełniającej akwarium w tym poziome. Różnica informuje ile wody jeszcze zostało do równomiernego rozlania. Następnie wartość tę dzielimy przez iloćś pustych przestrzeni w poziomie wyżej. Otrzymujemy poziom wody, który utworzy nadmiar wody na tym wyższym poziomie.
+                polozenie_roboczej = H[zestaw];//przypisanie wartości, która zakończy pętlę
+            }
+        }
+
+        if (polozenie_roboczej == H[zestaw]) // jeśli przeszło całą poprzednią pętlę, to znaczy, że naczynie jest napełnione do samej góry (albo się woda przelała, albo jest idealnie pełne)
+        {
+            czesc_calkowita = H[zestaw];
+            ulamek = 0;
+        }
+
+        cout << fixed << setprecision(5) << double(czesc_calkowita + ulamek) << endl;// wyświetlenie wartości
+
+        delete[] tablica_robocza;// usunięcie wszystkich elementów tablicy roboczej
+
+    }
+
+    for(int i = 0; i < D; ++i)
+    {
+        delete[] pi[i];
+    }
+
+    delete[] pi;
+    delete[] W;
+    delete[] H;
+    delete[] L;
+
+    return 0;
+}
